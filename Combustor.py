@@ -6,13 +6,13 @@ class Combustor:
         self.h = 1.2e8
         self.R = 287
         self.cp = cpin
-        self.g = self.cp(1)/(self.cp(1)-self.R)
+        self.g = cpin/(cpin-self.R)
         self.T = Ttin
         self.P = Ptin
         self.mf = mfin
         self.M = Min
-        self.A = self.mf*np.sqrt(self.R*self.T/self.g)/(self.P*self.M)*(1+(self.g-1)/2*self.M^2)^((self.g+1)/(2*(self.g-1)))
-        self.v = self.M*np.sqrt(self.g*self.R*self.T/(1+(self.g-1)/2*self.M^2))
+        self.A = self.mf*np.sqrt(self.R*self.T/self.g)/(self.P*self.M)*(1+(self.g-1)/2*self.M**2)**((self.g+1)/(2*(self.g-1)))
+        self.v = self.M*np.sqrt(self.g*self.R*self.T/(1+(self.g-1)/2*self.M**2))
         self.stepSize = stepSize
         self.l = l
         self.slope = slope
@@ -22,69 +22,80 @@ class Combustor:
 
     def normFuelCoeff(self):
         desiredmf = self.mf*.029
-        currentmf = np.trapz(np.linspace(0, self.l, len(self.a)), self.a)
+        currentmf = np.trapz(self.a, dx=self.l/(len(self.a)-1))
         self.a = self.a*desiredmf/currentmf
 
     def calcPerformance(self):
-        Tstat = self.T/(1+(self.g-1)/2*self.M^2)
-        Pstat = self.P/(1+(self.g-1)/2*self.M^2)^(self.g/(self.g-1))
-        self.T = np.concatenate(self.T*np.ones(len(self.l/self.stepSize)+1), Tstat*np.ones(len(self.l/self.stepSize)+1))
-        self.P = np.concatenate(self.P*np.ones(len(self.l/self.stepSize)+1), Pstat*np.ones(len(self.l/self.stepSize)+1))
-        self.mf = self.mf*np.ones(len(self.l/self.stepSize)+1)
-        self.M = self.M*np.ones(len(self.l/self.stepSize)+1)
-        self.A = self.A*np.ones(len(self.l/self.stepSize)+1)
-        self.g = self.g*np.ones(len(self.l/self.stepSize)+1)
-        self.v = self.v*np.ones(len(self.l/self.stepSize)+1)
-        self.cp = self.cp*np.ones(len(self.l/self.stepSize)+1)
-        self.R = self.R*np.ones(len(self.l/self.stepSize)+1)
+        if type(self.T) == type(1.0):
+            Tstat = self.T/(1+(self.g-1)/2*self.M**2)
+            Pstat = self.P/(1+(self.g-1)/2*self.M**2)**(self.g/(self.g-1))
+        else:
+            Tstat = self.T[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)
+            Pstat = self.P[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)**(self.g[0]/(self.g[0]-1))
+        self.T = self.T*np.ones((2, round(self.l/self.stepSize)+1))
+        self.T[1][0] = Tstat
+        self.P = self.P*np.ones((2, round(self.l/self.stepSize)+1))
+        self.P[1][0] = Pstat
+        self.mf = self.mf*np.ones(round(self.l/self.stepSize)+1)
+        self.M = self.M*np.ones(round(self.l/self.stepSize)+1)
+        self.A = self.A*np.ones(round(self.l/self.stepSize)+1)
+        self.g = self.g*np.ones(round(self.l/self.stepSize)+1)
+        self.v = self.v*np.ones(round(self.l/self.stepSize)+1)
+        self.cp = self.cp*np.ones(round(self.l/self.stepSize)+1)
+        self.R = self.R*np.ones(round(self.l/self.stepSize)+1)
         
-        for i in range(0, self.l/self.stepSize-1):
-            cpair = (27.453+6.1838*(self.T(1,i)/1000)+.89932*(self.T(1,i)/1000)^2)/28*1000
-            cpH2 = (26.896+4.3501*(self.T(1,i)/1000)-.32674*(self.T(1,i)/1000)^2)/2*1000
-            gair = cpair/(cpair-self.R)
+        for i in range(0, round(self.l/self.stepSize)):
+            cpair = (27.453+6.1838*(self.T[1][i]/1000)+.89932*(self.T[1][i]/1000)**2)/28*1000
+            cpH2 = (26.896+4.3501*(self.T[1][i]/1000)-.32674*(self.T[1][i]/1000)**2)/2*1000
+            gair = cpair/(cpair-self.R[0])
             gH2 = cpH2/(cpH2-4157)
-            alpha = (self.mf(i)-self.mf(0))/self.mf(0)
+            alpha = (self.mf[i]-self.mf[0])/self.mf[0]
             self.g[i+1] = (gair+alpha*gH2)/(1+alpha)
             self.cp[i+1] = (cpair+alpha*cpH2)/(1+alpha)
-            self.R[i+1] = (self.R+alpha*8314/2)/(1+alpha)
+            self.R[i+1] = (self.R[0]+alpha*8314/2)/(1+alpha)
             
             dm = (self.interp(i*self.stepSize)+self.interp((i-1)*self.stepSize))/2*self.stepSize 
-            self.mf[i+1] = self.mf(i) + dm
+            self.mf[i+1] = self.mf[i] + dm
             
-            dTt = dm*(self.h-self.T(0,i)*self.cp(i+1))/(self.cp(i+1)*self.mf(i+1))
-            self.T[0,i+1] = self.T(0,i) + dTt
+            dTt = dm*(self.h-self.T[0][i]*self.cp[i+1])/(self.cp[i+1]*self.mf[i+1])
+            self.T[0][i+1] = self.T[0][i] + dTt
             
-            slopeIndex = np.floor(i*self.stepSize*len(self.slope)/self.l)
-            dA = 2*np.sqrt(self.A(i)*np.pi)*np.tan(self.slope(slopeIndex))*self.stepSize
-            self.A[i+1] = self.A(i) + dA
+            slopeIndex = int(np.floor(i*self.stepSize*len(self.slope)/self.l))
+            dA = 2*np.sqrt(self.A[i]*np.pi)*np.tan(self.slope[slopeIndex])*self.stepSize
+            self.A[i+1] = self.A[i] + dA
             
-            dM = self.M(i)*(1+(self.g(i)-1)/2*self.M(i)^2)/(1-self.M(i))*(-1/self.A(i)*dA/self.stepSize+\
-                (1+self.g(i)*self.M(i)^2)/2*1/self.T(0,i)*dTt/self.stepSize)*self.stepSize
-            self.M[i+1] = self.M(i) + dM
+            dM = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*(-1/self.A[i]*dA/self.stepSize+\
+                (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*dTt/self.stepSize)*self.stepSize
+            self.M[i+1] = self.M[i] + dM
             
-            self.T[1,i+1] = self.T(0,i+1)/(1+(self.g(i+1)-1)/2*self.M(i+1)^2)
+            self.T[1][i+1] = self.T[0][i+1]/(1+(self.g[i+1]-1)/2*self.M[i+1]**2)
             
-            self.P[1,i+1] = self.mf(i+1)/(self.A(i+1)*self.M(i+1))*np.sqrt(self.R*self.T(1,i+1)/self.g(i+1))
-            self.P[0,i+1] = self.P(1,i+1)*(self.T(0,i+1)/self.T(1,i+1))^(self.g(i+1)/(self.g(i+1)-1))
+            self.P[1][i+1] = self.mf[i+1]/(self.A[i+1]*self.M[i+1])*np.sqrt(self.R[i+1]*self.T[1][i+1]/self.g[i+1])
+            self.P[0][i+1] = self.P[1][i+1]*(self.T[0][i+1]/self.T[1][i+1])**(self.g[i+1]/(self.g[i+1]-1))
             
-            self.v[i+1] = self.M(i+1)*np.sqrt(self.g(i+1)*self.R*self.T(1,i+1))
+            self.v[i+1] = self.M[i+1]*np.sqrt(self.g[i+1]*self.R[i+1]*self.T[1][i+1])
         
-        if self.P(1,len(self.P)) < self.targetExitPressure or min(self.M) < 1.05:
-            self.a = np.concatenate(0, random.random(len(self.a)-2), 0, axis=1)
-            self.slope = random.random(len(self.slope))*np.pi/2
+        if self.P[1][len(self.P)-1] < self.targetExitPressure or min(self.M) < 1.05:
+            for j in range(0, len(self.a)-1):
+                if j == 0 or j == len(self.a)-1:
+                    self.a[j] = 0
+                else:
+                    self.a[j] = random.random()
+            for j in range(0, len(self.slope)-1):
+                self.slope[j] = np.pi/2*random.random()
             self.calcPerformance()
     
     def interp(self, x):
         adx = self.l/(len(self.a)-1)
-        
+        a = 0
+
         if x == self.l:
             a = self.a(len(self.a))
         else:
             for i in range(0, len(self.a)-1):
-                if i*adx <= x and x < i*adx: 
-                    m = (self.a(i+1)-self.a(i))/adx
-                    a = m*(x-adx*(i-1))+self.a(i)
-
+                if i*adx <= x and x < (i+1)*adx: 
+                    m = (self.a[i+1]-self.a[i])/adx
+                    a = m*(x-adx*i)+self.a[i]
         return a
 
     def mutateFuelCoeff(self, mutRate):
@@ -100,7 +111,7 @@ class Combustor:
                 self.slope[i] = random.random()*np.pi/2
     
     def getExitV(self):
-        return self.v(len(self.v)-1)
+        return self.v[len(self.v)-1]
             
     def getSlope(self):
         return self.slope

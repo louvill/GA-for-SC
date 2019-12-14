@@ -2,7 +2,7 @@ import os
 import math
 import numpy as np
 import random
-import Combustor
+from Combustor import *
 
 os.system("cls")
 
@@ -12,11 +12,11 @@ P0 = 1090
 M0 = 6
 M2 = 2.5
 Tt0 = T0*(1+(g-1)/2*M0**2)
-print(Tt0)
+#print(Tt0)
 Pt0 = P0*(1+(g-1)/2*M0**2)**(g/(g-1))
 Pt2 = .7*Pt0
 slope = 10*np.pi/180*np.ones(10)
-dx = .0025
+dx = .001
 lt = 2
 
 
@@ -32,22 +32,32 @@ lt = 2
 #z = newton_krylov(f, guess)
 #print(z)
 
-cp0 = 1.308
+cp0 = 1308
 
 numParents = 20
 numChildren = 20
 generationSize = numParents+numChildren
-numGenerations = 1e2
+numGenerations = round(1e2)
 graphUpdateFrequency = 10
 numFuelCoeff = 10
 baseMutationRate = 5
 mutationRate = baseMutationRate
 
-carray = []
+carray = np.empty(generationSize, dtype=Combustor)
 
 for i in range(0, generationSize-1):
-    a = np.concatenate(0, random.random(numFuelCoeff-2), 0, axis=1)
-    slope = random.random(len(slope))*np.pi/2
-    carray[i] = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope, a, P0, cp0)
+    a = np.zeros(numFuelCoeff)
+    for j in range(0, numFuelCoeff-1):
+        if j == 0 or j == numFuelCoeff-1:
+            a[j] = 0
+        else:
+            a[j] = random.random()
 
+    slope = np.zeros(len(slope))
+    for j in range(0, len(slope)-1):
+        slope[j] = np.pi/2*random.random()
+    carray[i] = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope, a, P0, cp0)
+    carray[i].calcPerformance()
+    print(carray[i].getExitV())
+    
 genHistory = np.zeros(numGenerations)
