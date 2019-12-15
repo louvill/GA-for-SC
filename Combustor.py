@@ -10,6 +10,7 @@ class Combustor:
         self.T = Ttin
         self.P = Ptin
         self.mf = mfin
+        self.mfin = mfin 
         self.M = Min
         self.A = self.mf*np.sqrt(self.R*self.T/self.g)/(self.P*self.M)*(1+(self.g-1)/2*self.M**2)**((self.g+1)/(2*(self.g-1)))
         self.v = self.M*np.sqrt(self.g*self.R*self.T/(1+(self.g-1)/2*self.M**2))
@@ -21,9 +22,10 @@ class Combustor:
         self.normFuelCoeff()
 
     def normFuelCoeff(self):
-        desiredmf = self.mf*.029
+        desiredmf = self.mfin*.029
         currentmf = np.trapz(self.a, dx=self.l/(len(self.a)-1))
-        self.a = self.a*desiredmf/currentmf
+        for i in range(len(self.a)):
+            self.a[i] = self.a[i]*desiredmf/currentmf
 
     def calcPerformance(self):
         if type(self.T) == type(1.0):
@@ -61,7 +63,10 @@ class Combustor:
             self.T[0][i+1] = self.T[0][i] + dTt
             
             slopeIndex = int(np.floor(i*self.stepSize*len(self.slope)/self.l))
+            #print(slopeIndex)
+            #print(self.slope[slopeIndex])
             dA = 2*np.sqrt(self.A[i]*np.pi)*np.tan(self.slope[slopeIndex])*self.stepSize
+            #print(dA)
             self.A[i+1] = self.A[i] + dA
             
             dM = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*(-1/self.A[i]*dA/self.stepSize+\
@@ -79,16 +84,18 @@ class Combustor:
             #    print(self.T[1][i+1])
             #    print(self.g[i+1])
             #    print()
-            if self.P[0][i+1] < self.targetExitPressure:
+            if self.P[1][i+1] < self.targetExitPressure:
+                #print('hello')
+                self.v[i+1] = -1
                 break
             
             self.v[i+1] = self.M[i+1]*np.sqrt(self.g[i+1]*self.R[i+1]*self.T[1][i+1])
         
-        if self.P[1][len(self.P)-1] < self.targetExitPressure or min(self.M) < 1.05:
+        if self.P[1][len(self.P)-1] < self.targetExitPressure or min(self.M) < 1.05 or min(self.v) == -1:
             for j in range(1, len(self.a)-1):
                 self.a[j] = random.random()
             for j in range(len(self.slope)):
-                self.slope[j] = np.pi/2*random.random()
+                self.slope[j] = np.pi/4*random.random()
             self.calcPerformance()
     
     def interp(self, x):
@@ -114,7 +121,7 @@ class Combustor:
     def mutateSlope(self, mutRate):
         for i in range(0, len(self.slope)-1):
             if round(mutRate*random.random()) == 0:
-                self.slope[i] = random.random()*np.pi/2
+                self.slope[i] = random.random()*np.pi/4
     
     def getExitV(self):
         return self.v[len(self.v)-1]
@@ -139,3 +146,6 @@ class Combustor:
     
     def getg(self):
         return self.g
+
+    def getA(self):
+        return self.A
