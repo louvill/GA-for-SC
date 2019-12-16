@@ -24,8 +24,9 @@ class Combustor:
     def normFuelCoeff(self):
         desiredmf = self.mfin*.029
         currentmf = np.trapz(self.a, dx=self.l/(len(self.a)-1))
-        for i in range(len(self.a)):
-            self.a[i] = self.a[i]*desiredmf/currentmf
+        if currentmf > desiredmf:
+            for i in range(len(self.a)):
+                self.a[i] = self.a[i]*desiredmf/currentmf
 
     def calcPerformance(self):
         if type(self.T) == type(1.0):
@@ -56,7 +57,8 @@ class Combustor:
             self.cp[i+1] = (cpair+alpha*cpH2)/(1+alpha)
             self.R[i+1] = (self.R[0]+alpha*8314/2)/(1+alpha)
             
-            dm = (self.interp(i*self.stepSize)+self.interp((i-1)*self.stepSize))/2*self.stepSize 
+            dm = (self.interp(i*self.stepSize)+self.interp((i+1)*self.stepSize))/2*self.stepSize
+            #print(dm/self.stepSize) 
             self.mf[i+1] = self.mf[i] + dm
             
             dTt = dm*(self.h-self.T[0][i]*self.cp[i+1])/(self.cp[i+1]*self.mf[i+1])
@@ -103,7 +105,7 @@ class Combustor:
         a = 0
 
         if x == self.l:
-            a = self.a(len(self.a))
+            a = self.a[len(self.a)-1]
         else:
             for i in range(len(self.a)):
                 if i*adx <= x and x < (i+1)*adx: 
@@ -124,7 +126,10 @@ class Combustor:
                 self.slope[i] = random.random()*np.pi/4
     
     def getExitV(self):
-        return self.v[len(self.v)-1]
+        if isinstance(self.v, float):
+            return -1
+        else:
+            return self.v[len(self.v)-1]
             
     def getSlope(self):
         return self.slope
@@ -149,3 +154,6 @@ class Combustor:
 
     def getA(self):
         return self.A
+
+    def getMassFlow(self):
+        return self.mf
