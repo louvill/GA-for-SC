@@ -51,22 +51,25 @@
 #plt.plot(np.linspace(0,lt,len(c.getA())),c.getA())
 #plt.show()
 
-from multiprocessing import Process
+from threading import Thread
 import numpy as np
 import time
 
-def test(number):
-    time.sleep(number)
-    print('Hello #'+str(number))
+def test(a, x, b):
+    print(a[x])
+    a[x] = b
+    print(a[x])
 
 def main():
-    processes = np.empty(10, dtype=Process)
-    for i in range(10):
-        processes[i] = Process(target=test, args=(i, ))
+    a = [1, 2]
+    processes = np.empty(len(a), dtype=Thread)
+    for i in range(len(a)):
+        processes[i] = Thread(target=test, args=(a, i, 3,))
         processes[i].start()
-        #processes[i].join()
-    for i in range(10):
+
+    for i in range(len(a)):
         processes[i].join()
+        print(a[i])
 
 if __name__ == "__main__":
     main()

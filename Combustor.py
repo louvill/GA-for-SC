@@ -24,9 +24,12 @@ class Combustor:
     def normFuelCoeff(self):
         desiredmf = self.mfin*.029
         currentmf = np.trapz(self.a, dx=self.l/(len(self.a)-1))
-        if currentmf > desiredmf:
-            for i in range(len(self.a)):
-                self.a[i] = self.a[i]*desiredmf/currentmf
+        #if currentmf > desiredmf:
+        #    for i in range(len(self.a)):
+        #        self.a[i] = self.a[i]*desiredmf/currentmf
+        for i in range(len(self.a)):
+            self.a[i] = self.a[i]*desiredmf/currentmf
+
 
     def calcPerformance(self):
         if type(self.T) == type(1.0):
@@ -157,3 +160,9 @@ class Combustor:
 
     def getMassFlow(self):
         return self.mf
+
+    def seta(self, a):
+        self.a = a
+
+    def setSlope(self, slope):
+        self.slope = slope

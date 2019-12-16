@@ -3,13 +3,14 @@ import math
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-import multiprocessing
+from threading import Thread
 from copy import copy
 from Combustor import *
 
-def performanceThreads(carray, childNum, numParents):
-    carray[childNum+numParents].calcPerformance()
-    print('Thread ' + str(childNum) + ' complete')
+def performanceThreads(carray, processNum, numParents, numChildren):
+    for i in range(round(numChildren/4)):
+        carray[processNum+i+numParents].calcPerformance()
+    print('Thread ' + str(processNum) + ' complete')
 
 def main():
     os.system("cls")
@@ -42,8 +43,8 @@ def main():
 
     cp0 = 1218
 
-    numParents = 20
-    numChildren = 20
+    numParents = 100
+    numChildren = 100
     generationSize = numParents+numChildren
     numGenerations = round(1e1)
     numFuelCoeff = 10
@@ -87,7 +88,7 @@ def main():
 
         genHistory[i] = carray[0].getExitV()
 
-        processes = np.empty(numChildren, dtype=multiprocessing.Process)
+        processes = np.empty(4, dtype=Thread)
         
         for j in range(numChildren):
             p1 = round(random.random()*numParents)
@@ -105,41 +106,19 @@ def main():
             xop = round(random.random()*(len(slope1)-1))
             slope1 = np.concatenate((slope1[0:xop],slope2[xop:len(slope2)]))
 
-            carray[j+numParents] = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope1, a1, P0, cp0)
+            carray[j+numParents].seta(a1)
+            carray[j+numParents].setSlope(slope1)
             carray[j+numParents].mutateFuelCoeff(baseMutationRate)
             carray[j+numParents].normFuelCoeff()
             carray[j+numParents].mutateSlope(baseMutationRate)
 
-        #genChild(childNum, numParents, carray, baseMutationRate, Tt0, Pt2, M2, dx, lt, slope, P0, cp0)
-        for j in range(numChildren):
-            processes[j] = multiprocessing.Process(target=performanceThreads, args=(carray, j, numParents))
+        for j in range(len(processes)):
+            processes[j] = Thread(target=performanceThreads, args=(carray, j, numParents, numChildren))
             processes[j].start()
-            print(j)
+            print('Thread ' + str(j) + ' started')
 
-        for j in range(numChildren):
+        for j in range(len(processes)):
             processes[j].join()
-
-        #for j in range(numParents, generationSize):
-        #    p1 = round(random.random()*numParents)
-        #    p2 = round(random.random()*numParents)
-        #    while p2 == p1:
-        #        p2 = round(random.random()*numParents)
-    #
-        #    a1 = carray[p1].geta()
-        #    a2 = carray[p2].geta()
-        #    xop = round(random.random()*(len(a)-2))+1
-        #    a1 = np.concatenate((a1[0:xop],a2[xop:len(a2)]))
-    #
-        #    slope1 = carray[p1].getSlope()
-        #    slope2 = carray[p2].getSlope()
-        #    xop = round(random.random()*(len(slope1)-1))
-        #    slope1 = np.concatenate((slope1[0:xop],slope2[xop:len(slope2)]))
-    #
-        #    carray[j] = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope1, a1, P0, cp0)
-        #    carray[j].mutateFuelCoeff(baseMutationRate)
-        #    carray[j].normFuelCoeff()
-        #    carray[j].mutateSlope(baseMutationRate)
-        #    carray[j].calcPerformance()
 
     print(carray[0].geta())
     print(carray[0].getSlope())
