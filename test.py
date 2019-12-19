@@ -1,7 +1,7 @@
 #import os
 #import math
 #import numpy as np
-#import random
+import random
 #import matplotlib.pyplot as plt
 #from copy import copy
 #from Combustor import *
@@ -71,5 +71,15 @@ def main():
         processes[i].join()
         print(a[i])
 
+    for i in range(10):
+        print(round(random.random())==1)
+
 if __name__ == "__main__":
     main()
+
+#good result:
+#
+#[0.         3.25806123 0.24854106 3.48403672 1.8945325  2.38851093
+# 0.77314638 0.8736639  0.12950727 0.        ]
+#[0.0438278  0.16419715 0.40768724 0.61148441 0.46664118 0.62414804
+# 0.57921686 0.66262119 0.74333283 0.77133125]
