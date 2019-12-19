@@ -55,27 +55,35 @@ from threading import Thread
 import numpy as np
 import time
 
-def test(a, x, b):
-    print(a[x])
-    a[x] = b
-    print(a[x])
+#def test(a, x, b):
+#    print(a[x])
+#    a[x] = b
+#    print(a[x])
+#
+#def main():
+#    a = [1, 2]
+#    processes = np.empty(len(a), dtype=Thread)
+#    for i in range(len(a)):
+#        processes[i] = Thread(target=test, args=(a, i, 3,))
+#        processes[i].start()
+#
+#    for i in range(len(a)):
+#        processes[i].join()
+#        print(a[i])
+#
+#    for i in range(10):
+#        print(round(random.random())==1)
+#
+#if __name__ == "__main__":
+#    main()
 
-def main():
-    a = [1, 2]
-    processes = np.empty(len(a), dtype=Thread)
-    for i in range(len(a)):
-        processes[i] = Thread(target=test, args=(a, i, 3,))
-        processes[i].start()
+a = [3.5141558277945717, 4.864697382482226, 4.6076019740667915, 3.967788026461869, 3.18198137638868, 4.644023962022158, 3.048078684203376, 0.14181677323853337, 3.998614812385034, 0.09208247698853145]
+print(np.trapz(a,dx=2/(len(a)-1)))
+print(100*.029)
+for i in range(len(a)):
+    a[i] = a[i]*(100*.029)/np.trapz(a,dx=2/(len(a)-1))
 
-    for i in range(len(a)):
-        processes[i].join()
-        print(a[i])
-
-    for i in range(10):
-        print(round(random.random())==1)
-
-if __name__ == "__main__":
-    main()
+print(a)
 
 #good result:
 #

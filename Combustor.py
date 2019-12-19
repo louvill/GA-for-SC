@@ -83,24 +83,23 @@ class Combustor:
                 
                 self.P[1][i+1] = self.mf[i+1]/(self.A[i+1]*self.M[i+1])*np.sqrt(self.R[i+1]*self.T[1][i+1]/self.g[i+1])
                 self.P[0][i+1] = self.P[1][i+1]*(self.T[0][i+1]/self.T[1][i+1])**(self.g[i+1]/(self.g[i+1]-1))
-                #if self.P[0][i+1] > 1e10:
-                #    print()
-                #    print(self.P[1][i+1])
-                #    print(self.T[0][i+1])
-                #    print(self.T[1][i+1])
-                #    print(self.g[i+1])
-                #    print()
 
                 self.v[i+1] = self.M[i+1]*np.sqrt(self.g[i+1]*self.R[i+1]*self.T[1][i+1])
 
-                if self.P[1][i+1] < self.targetExitPressure or min(self.M) < 1.05:
+                #print(i)
+                if self.P[1][i+1] < self.targetExitPressure or self.M[i] < 1.05:
                     #print('hello')
-                    #self.v[i+1] = -1
-                    for j in range(1, len(self.v)):
-                        self.v[j] = -1
+                    self.v[i+1] = -1
+                    #print(i)
+                    #print('Pressure or Mach deficiency at '+str(i*self.stepSize))
+                    #print(self.P[1][i+1])
+                    #print(min(self.M))
+                    #print(self.M)
+                    #for j in range(1, len(self.v)):
+                    #    self.v[j] = -1
                     break
             
-            if self.P[1][len(self.P)-1] < self.targetExitPressure or min(self.M) < 1.1 or min(self.v) == -1:
+            if min(self.v) == -1:
                 numFuelCoeff = len(self.a)
                 numSlope = len(self.slope)
                 self.a = []
@@ -109,6 +108,8 @@ class Combustor:
                     self.a.append(5*random.random())
                 for j in range(numSlope):
                     self.slope.append(np.pi/4*random.random())
+                #print(self.a)
+                self.normFuelCoeff()
                 self.calcPerformance(attemptNumber+1)
     
     def interp(self, x):
