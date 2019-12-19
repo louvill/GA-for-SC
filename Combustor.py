@@ -24,11 +24,11 @@ class Combustor:
     def normFuelCoeff(self):
         desiredmf = self.mfin*.029
         currentmf = np.trapz(self.a, dx=self.l/(len(self.a)-1))
-        #if currentmf > desiredmf:
-        #    for i in range(len(self.a)):
-        #        self.a[i] = self.a[i]*desiredmf/currentmf
-        for i in range(len(self.a)):
-            self.a[i] = self.a[i]*desiredmf/currentmf
+        if currentmf > desiredmf:
+            for i in range(len(self.a)):
+                self.a[i] = self.a[i]*desiredmf/currentmf
+        #for i in range(len(self.a)):
+        #    self.a[i] = self.a[i]*desiredmf/currentmf
 
 
     def calcPerformance(self, attemptNumber):

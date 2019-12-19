@@ -56,7 +56,8 @@ def main():
         #print(carray[i].geta())
     
     #input('Press enter')
-    genHistory = np.zeros(numGenerations)
+    #genHistory = np.zeros(numGenerations)
+    genHistory = []
 
     for i in range(numGenerations):
         print('Current Generation: ' + str(i+1))
@@ -64,7 +65,7 @@ def main():
         carray.sort(key=lambda Combustor: Combustor.getExitV(), reverse=True)
 
         #generation performance
-        genHistory[i] = carray[0].getExitV()
+        genHistory.append(carray[0].getExitV())
         for j in range(5):
             print('Exit velocity for element ' + str(j+1) + ': ' + str(carray[j].getExitV()))
 
@@ -116,32 +117,34 @@ def main():
         for j in range(len(processes)):
             processes[j].join()
 
+        figNum = 0
+        plt.figure(1)
+        plt.clf()
+        plt.subplot(4,2,1)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getM())
+        plt.subplot(4,2,2)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[0])
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[1])
+        plt.subplot(4,2,3)
+        plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[0])
+        plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[1])
+        plt.subplot(4,2,4)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getv())
+        plt.subplot(4,2,5)
+        plt.plot(np.linspace(1,len(genHistory),len(genHistory)),genHistory)
+        plt.subplot(4,2,6)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].geta())),carray[figNum].geta())
+        plt.subplot(4,2,7)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getg())),carray[figNum].getg())
+        plt.subplot(4,2,8)
+        plt.plot(np.linspace(0,lt,len(carray[figNum].getA())),carray[figNum].getA())
+        plt.pause(.05)
+
         #input('Press enter')
 
     print(carray[0].geta())
     print(carray[0].getSlope())
 
-    figNum = 0
-
-    plt.figure(1)
-    plt.subplot(4,2,1)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getM())
-    plt.subplot(4,2,2)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[0])
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[1])
-    plt.subplot(4,2,3)
-    plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[0])
-    plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[1])
-    plt.subplot(4,2,4)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getv())
-    plt.subplot(4,2,5)
-    plt.plot(np.linspace(1,len(genHistory),len(genHistory)),genHistory)
-    plt.subplot(4,2,6)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].geta())),carray[figNum].geta())
-    plt.subplot(4,2,7)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getg())),carray[figNum].getg())
-    plt.subplot(4,2,8)
-    plt.plot(np.linspace(0,lt,len(carray[figNum].getA())),carray[figNum].getA())
     plt.show()
 
 if __name__ == "__main__":
