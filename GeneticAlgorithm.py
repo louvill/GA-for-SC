@@ -16,7 +16,7 @@ def performanceThreads(carray, processNum, numParents, numChildren, numThreads):
 def main():
     os.system("cls")
 
-    #inputs
+    #physcial inputs
     g = 1.4
     T0 = 227
     P0 = 1090
@@ -54,28 +54,23 @@ def main():
         carray[i].normFuelCoeff()
         carray[i].calcPerformance()
         print('Element ' + str(i+1) + ' initialized with jet thrust of ' + str(carray[i].getJetThrust()))
-        #print(carray[i].geta())
-    
-    #input('Press enter')
-    #genHistory = np.zeros(numGenerations)
+
+    #algorithm performance metrics
     genHistory = []
     startTime = time.time()
-
-
-    #pool = ThreadPool()
 
     for i in range(numGenerations):
         print('Current Generation: ' + str(i+1))
 
+        #population sort
         carray.sort(key=lambda Combustor: Combustor.getJetThrust(), reverse=True)
 
-        #generation performance
+        #generation performance reporting
         genHistory.append(carray[0].getJetThrust())
         for j in range(5):
             print('Jet thrust for element ' + str(j+1) + ': ' + str(carray[j].getJetThrust()))
 
-        #input('Press enter')
-
+        #breeding
         for j in range(numChildren):
             done = False
             while not done:
@@ -111,8 +106,7 @@ def main():
                     np.array_equal(slopenew, slope2)):
                     done = True
 
-        
-        #processes = np.empty(numThreads, dtype=Thread)
+        #performance calculations
         processes = []
 
         for j in range(numThreads):
@@ -123,6 +117,7 @@ def main():
         for j in range(len(processes)):
             processes[j].join()
 
+        #plotting
         figNum = 0
         plt.figure(1)
         plt.clf()
@@ -152,6 +147,7 @@ def main():
         plt.subplot(4,2,8)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getA())),carray[figNum].getA())
         plt.grid()
+        #diagnostic graphs
         #plt.subplot(4,2,6)
         #plt.plot(np.linspace(0,lt,len(carray[figNum].getdA())),carray[figNum].getdA())
         #plt.grid()
@@ -163,12 +159,13 @@ def main():
         #plt.subplot(4,2,8)
         #plt.plot(np.linspace(0,lt,len(carray[figNum].getdTt())),carray[figNum].getdTt())
         #plt.grid()
+
         plt.pause(.05)
 
-        #input('Press enter')
-
+    #runtime report
     print(time.time()-startTime)
 
+    #most fit genes
     print(carray[0].geta())
     print(carray[0].getSlope())
 

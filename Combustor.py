@@ -30,9 +30,6 @@ class Combustor:
         if currentmf > desiredmf:
             for i in range(len(self.a)):
                 self.a[i] = self.a[i]*desiredmf/currentmf
-        #for i in range(len(self.a)):
-        #    self.a[i] = self.a[i]*desiredmf/currentmf
-
 
     def calcPerformance(self):
         if type(self.T) == type(1.0):
@@ -64,7 +61,6 @@ class Combustor:
             self.R[i+1] = (self.R[0]+alpha*8314/2)/(1+alpha)
             
             dm = (self.interp(i*self.stepSize)+self.interp((i+1)*self.stepSize))/2*self.stepSize
-            #print(dm/self.stepSize) 
             self.mf[i+1] = self.mf[i] + dm
             
             self.dTt[i+1] = dm*(self.h-self.T[0][i]*self.cp[i+1])/(self.cp[i+1]*self.mf[i+1])
@@ -75,14 +71,9 @@ class Combustor:
                 slopeIndex = 0
             elif slopeIndex > len(self.slope)-1:
                 slopeIndex = len(self.slope)-1
-            #print(slopeIndex)
-            #print(self.slope[slopeIndex])
             self.dA[i+1] = 2*np.sqrt(self.A[i]*np.pi)*np.tan(self.slope[slopeIndex])*self.stepSize
-            #print(dA)
             self.A[i+1] = self.A[i] + self.dA[i+1]
             
-            #self.dM[i+1] = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*(-1/self.A[i]*self.dA[i+1]/self.stepSize+\
-            #    (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*self.dTt[i+1]/self.stepSize)*self.stepSize
             self.dM[0][i+1] = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*self.stepSize
             self.dM[1][i+1] = -1/self.A[i]*self.dA[i+1]/self.stepSize
             self.dM[2][i+1] = (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*self.dTt[i+1]/self.stepSize
