@@ -3,13 +3,14 @@ import math
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import time
 from threading import Thread
 from copy import copy
 from Combustor import *
 
 def performanceThreads(carray, processNum, numParents, numChildren, numThreads):
     for i in range(round(numChildren/numThreads)):
-        carray[round(numChildren/numThreads)*processNum+i+numParents].calcPerformance(0)
+        carray[round(numChildren/numThreads)*processNum+i+numParents].calcPerformance()
     print('Thread ' + str(processNum) + ' complete')
 
 def main():
@@ -28,15 +29,15 @@ def main():
     cp0 = 1218
     
     #genetic alogrithm parameters
-    dx = .005
+    dx = .01
     numParents = 100
     numChildren = 100
     generationSize = numParents+numChildren
     numGenerations = round(1e2)
     numFuelCoeff = 10
     numSlope = 10
-    numThreads = 10
-    baseMutationRate = 10
+    numThreads = 5
+    baseMutationRate = 3
 
     carray = []
 
@@ -49,25 +50,29 @@ def main():
             a.append(5*random.random())
         for j in range(numSlope):
             slope.append(np.pi/4*random.random())
-        carray.append(Combustor(Tt0, Pt2, 100, M2, dx, lt, slope, a, P0, cp0))
+        carray.append(Combustor(Tt0, Pt2, 10, M2, dx, lt, slope, a, P0, cp0))
         carray[i].normFuelCoeff()
-        carray[i].calcPerformance(0)
-        print('Element ' + str(i+1) + ' initialized with exit velocity of ' + str(carray[i].getExitV()))
+        carray[i].calcPerformance()
+        print('Element ' + str(i+1) + ' initialized with jet thrust of ' + str(carray[i].getJetThrust()))
         #print(carray[i].geta())
     
     #input('Press enter')
     #genHistory = np.zeros(numGenerations)
     genHistory = []
+    startTime = time.time()
+
+
+    #pool = ThreadPool()
 
     for i in range(numGenerations):
         print('Current Generation: ' + str(i+1))
 
-        carray.sort(key=lambda Combustor: Combustor.getExitV(), reverse=True)
+        carray.sort(key=lambda Combustor: Combustor.getJetThrust(), reverse=True)
 
         #generation performance
-        genHistory.append(carray[0].getExitV())
+        genHistory.append(carray[0].getJetThrust())
         for j in range(5):
-            print('Exit velocity for element ' + str(j+1) + ': ' + str(carray[j].getExitV()))
+            print('Jet thrust for element ' + str(j+1) + ': ' + str(carray[j].getJetThrust()))
 
         #input('Press enter')
 
@@ -107,10 +112,11 @@ def main():
                     done = True
 
         
-        processes = np.empty(numThreads, dtype=Thread)
+        #processes = np.empty(numThreads, dtype=Thread)
+        processes = []
 
-        for j in range(len(processes)):
-            processes[j] = Thread(target=performanceThreads, args=(carray, j, numParents, numChildren, numThreads,))
+        for j in range(numThreads):
+            processes.append(Thread(target=performanceThreads, args=(carray, j, numParents, numChildren, numThreads,)))
             processes[j].start()
             print('Thread ' + str(j) + ' started')
 
@@ -122,25 +128,46 @@ def main():
         plt.clf()
         plt.subplot(4,2,1)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getM())
+        plt.grid()
         plt.subplot(4,2,2)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[0])
         plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getT()[1])
+        plt.grid()
         plt.subplot(4,2,3)
         plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[0])
         plt.semilogy(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getP()[1])
+        plt.grid()
         plt.subplot(4,2,4)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getM())),carray[figNum].getv())
+        plt.grid()
         plt.subplot(4,2,5)
-        plt.plot(np.linspace(1,len(genHistory),len(genHistory)),genHistory)
+        plt.semilogx(np.linspace(1,len(genHistory),len(genHistory)),genHistory)
+        plt.grid()
         plt.subplot(4,2,6)
         plt.plot(np.linspace(0,lt,len(carray[figNum].geta())),carray[figNum].geta())
+        plt.grid()
         plt.subplot(4,2,7)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getg())),carray[figNum].getg())
+        plt.grid()
         plt.subplot(4,2,8)
         plt.plot(np.linspace(0,lt,len(carray[figNum].getA())),carray[figNum].getA())
+        plt.grid()
+        #plt.subplot(4,2,6)
+        #plt.plot(np.linspace(0,lt,len(carray[figNum].getdA())),carray[figNum].getdA())
+        #plt.grid()
+        #plt.subplot(4,2,7)
+        #plt.plot(np.linspace(0,lt,len(carray[figNum].getdM()[0])),carray[figNum].getdM()[0])
+        #plt.plot(np.linspace(0,lt,len(carray[figNum].getdM()[0])),carray[figNum].getdM()[1])
+        #plt.plot(np.linspace(0,lt,len(carray[figNum].getdM()[0])),carray[figNum].getdM()[2])
+        #plt.grid()
+        #plt.subplot(4,2,8)
+        #plt.plot(np.linspace(0,lt,len(carray[figNum].getdTt())),carray[figNum].getdTt())
+        #plt.grid()
         plt.pause(.05)
 
         #input('Press enter')
+
+    print(time.time()-startTime)
 
     print(carray[0].geta())
     print(carray[0].getSlope())

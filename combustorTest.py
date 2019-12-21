@@ -3,6 +3,7 @@ import math
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from scipy import signal
 from threading import Thread
 from copy import copy
 from Combustor import *
@@ -24,61 +25,42 @@ lt = 2
 cp0 = 1218
 
 #a1 = [0, 2.00604e-06, 1.68778e-01, 2.09479e-01, 1.038647, 8.31101, 1.70367e-01, 3.14518, 6.53232e-03, 0]
-a2 = [0, .1, .1, .1, .1, .1, .1, .1, .1, 0]
-slope1 = [0.32618688, 0.4646109, 0.59741923, 0.59728165, 0.31057739, 0.22601837, 0.35792988, 0.46239392, 0.10119357, 0.67869688]
+#a2 = [0, .1, .1, .1, .1, .1, .1, .1, .1, 0]
+#slope1 = [0.32618688, 0.4646109, 0.59741923, 0.59728165, 0.31057739, 0.22601837, 0.35792988, 0.46239392, 0.10119357, 0.67869688]
 #a2 = [0., 0.26407752, 2.40385772, 2.52501919, 0.67906279, 2.58592853, 0.88182265, 2.44289154, 1.26734006, 0.]
-a1 = [0, .1, .2, .3, .4, .5, .6, .7, .8, 0]
-slope2 = [0.14590859, 0.48537457, 0.55913541, 0.48341576, 0.49775156, 0.69032791, 0.71117747, 0.05999473, 0.58580791, 0.30709216]
+#a1 = [0, .1, .2, .3, .4, .5, .6, .7, .8, 0]
+#slope2 = [0.14590859, 0.48537457, 0.55913541, 0.48341576, 0.49775156, 0.69032791, 0.71117747, 0.05999473, 0.58580791, 0.30709216]
 
-c = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope1, a1, P0, cp0)
-c.calcPerformance()
+a = [0.09111270349317344, 6.500883767477569, 4.359035911831136, 3.7899605394823004, 4.031012454331137, 0.03677255388738895, 3.1515204795813405, 3.742299044182028, 1.0881209743215112, 3.513825573241149, 4.653905923436298, 0.21378589503877088, 6.299915214045363, 1.9973603086616565, 1.6401945617515405, 0.5955047601985064, 0.9889817257363124, 2.5350143949477197, 0.2037196669638361, 2.5504215613288213, 0.9372438979051255, 0.1376256266480933, 2.1200506706351336, 0.07598014472493356, 2.654390400840269, 0.014349873609554687, 0.8814611756092694, 0.0952899897359166, 2.5852983861051286, 1.9304149761177518, 0.11944916226782569, 0.13745255488769934, 0.8490815948124572, 2.852504556294526, 0.2346992945996466, 0.7623430239179013, 1.2709488566399452, 0.6137831421572228, 0.11513860847576653, 0.41179994050775987, 0.04092954552453289, 0.01839941326979672, 0.18182247676314744, 0.0038410335077643013, 0.02178731203411946, 0.0009121330085970626, 0.02425462984635052, 0.0038648292908741583, 0.01594912787087402, 0.00228392040213029]
+slope = [0.027411159651264845, 0.09425789277824481, 0.19049037652906542, 0.7527230282772717, 0.27779590837087875, 0.5984412357865293, 0.5207201003427627, 0.11458455041455005, 0.6883961834918904, 0.7137237724117079, 0.7572016955210834, 0.01966863662188699, 0.701782009568519, 0.7560892956196192, 0.7218320225034351, 0.621889833809841, 0.7561410713494109, 0.4267654449172086, 0.17675800644780254, 0.5444073954702667, 0.5925823217512819, 0.3510557663370734, 0.5968388377286551, 0.5820105000320434, 0.6620470169696214, 0.6543195620296415, 0.7108472875819871, 0.6517502772496689, 0.6699014922127321, 0.19572433967932765, 0.5553109797062117, 0.6096818455729285, 0.6801619161361301, 0.7596486818307625, 0.47274079731704366, 0.23328515585487777, 0.4082708702488716, 0.6098934460615466, 0.7624898190505727, 0.22090376294015346, 0.7066234483119467, 0.5559052262287437, 0.7470151938498982, 0.674096202103328, 0.6068703128361969, 0.4053345202331384, 0.7676497896354864, 0.6796153007054201, 0.6650448597121691, 0.7831850331122177]
 
-c2 = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope2, a2, P0, cp0)
-c2.calcPerformance()
+coriginal = Combustor(Tt0, Pt2, 100, M2, dx, lt, slope, a, P0, cp0)
+coriginal.calcPerformance(0)
 
-array = [c, c2]
+aprime = signal.savgol_filter(coriginal.geta(),11,10)
+slopeprime = signal.savgol_filter(coriginal.geta(),11,10)
 
-print(array[0])
-print(array[1])
+c = Combustor(Tt0, Pt2, 100, M2, dx, lt, slopeprime, aprime, P0, cp0)
 
-print(array[0].geta())
-print(array[1].geta())
-
-print(array[0].getExitV())
-print(array[1].getExitV())
-
-#array = sorted(array, key=lambda Combustor: Combustor.getExitV(), reverse=True)
-array.sort(key=lambda Combustor: Combustor.getExitV(), reverse=True)
-
-print('sorted')
-
-print(array[0])
-print(array[1])
-
-print(array[0].geta())
-print(array[1].geta())
-
-print(array[0].getExitV())
-print(array[1].getExitV())
-
-#plt.figure(1)
-#plt.subplot(4,2,1)
-#plt.plot(np.linspace(0,lt,len(c.getM())),c.getM())
-#plt.subplot(4,2,2)
-#plt.plot(np.linspace(0,lt,len(c.getM())),c.getT()[0])
-#plt.plot(np.linspace(0,lt,len(c.getM())),c.getT()[1])
-#plt.subplot(4,2,3)
-#plt.semilogy(np.linspace(0,lt,len(c.getM())),c.getP()[0])
-#plt.semilogy(np.linspace(0,lt,len(c.getM())),c.getP()[1])
-#plt.subplot(4,2,4)
-#plt.plot(np.linspace(0,lt,len(c.getM())),c.getv())
-#plt.subplot(4,2,5)
-#plt.plot(np.linspace(0,lt,len(c.getM())),c.getMassFlow())
-#plt.subplot(4,2,6)
-#plt.plot(np.linspace(0,lt,len(c.geta())),c.geta())
-#plt.subplot(4,2,7)
-#plt.plot(np.linspace(0,lt,len(c.getg())),c.getg())
-#plt.subplot(4,2,8)
-#plt.plot(np.linspace(0,lt,len(c.getA())),c.getA())
-#plt.show()
-#
+plt.figure(1)
+plt.subplot(4,2,1)
+plt.plot(np.linspace(0,lt,len(c.getM())),c.getM())
+plt.subplot(4,2,2)
+plt.plot(np.linspace(0,lt,len(c.getM())),c.getT()[0])
+plt.plot(np.linspace(0,lt,len(c.getM())),c.getT()[1])
+plt.subplot(4,2,3)
+plt.semilogy(np.linspace(0,lt,len(c.getM())),c.getP()[0])
+plt.semilogy(np.linspace(0,lt,len(c.getM())),c.getP()[1])
+plt.subplot(4,2,4)
+plt.plot(np.linspace(0,lt,len(c.getM())),c.getv())
+plt.subplot(4,2,5)
+plt.plot(np.linspace(0,lt,len(c.getM())),c.getMassFlow())
+plt.subplot(4,2,6)
+plt.plot(np.linspace(0,lt,len(c.geta())),c.geta())
+plt.plot(np.linspace(0,lt,len(c.geta())),aprime)
+plt.subplot(4,2,7)
+plt.subplot(4,2,7)
+plt.plot(np.linspace(0,lt,len(c.getg())),c.getg())
+plt.subplot(4,2,8)
+plt.plot(np.linspace(0,lt,len(c.getA())),c.getA())
+plt.show()

@@ -20,6 +20,9 @@ class Combustor:
         self.a = a
         self.targetExitPressure = targetExitPressure
         self.normFuelCoeff()
+        self.dA = np.zeros(round(self.l/self.stepSize)+1)
+        self.dTt = np.zeros(round(self.l/self.stepSize)+1)
+        self.dM = np.zeros((3, round(self.l/self.stepSize)+1))
 
     def normFuelCoeff(self):
         desiredmf = self.mfin*.029
@@ -31,86 +34,70 @@ class Combustor:
         #    self.a[i] = self.a[i]*desiredmf/currentmf
 
 
-    def calcPerformance(self, attemptNumber):
-        if attemptNumber < 100:
-            if type(self.T) == type(1.0):
-                Tstat = self.T/(1+(self.g-1)/2*self.M**2)
-                Pstat = self.P/(1+(self.g-1)/2*self.M**2)**(self.g/(self.g-1))
-            else:
-                Tstat = self.T[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)
-                Pstat = self.P[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)**(self.g[0]/(self.g[0]-1))
-            self.T = self.T*np.ones((2, round(self.l/self.stepSize)+1))
-            self.T[1][0] = Tstat
-            self.P = self.P*np.ones((2, round(self.l/self.stepSize)+1))
-            self.P[1][0] = Pstat
-            self.mf = self.mf*np.ones(round(self.l/self.stepSize)+1)
-            self.M = self.M*np.ones(round(self.l/self.stepSize)+1)
-            self.A = self.A*np.ones(round(self.l/self.stepSize)+1)
-            self.g = self.g*np.ones(round(self.l/self.stepSize)+1)
-            self.v = self.v*np.ones(round(self.l/self.stepSize)+1)
-            self.cp = self.cp*np.ones(round(self.l/self.stepSize)+1)
-            self.R = self.R*np.ones(round(self.l/self.stepSize)+1)
+    def calcPerformance(self):
+        if type(self.T) == type(1.0):
+            Tstat = self.T/(1+(self.g-1)/2*self.M**2)
+            Pstat = self.P/(1+(self.g-1)/2*self.M**2)**(self.g/(self.g-1))
+        else:
+            Tstat = self.T[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)
+            Pstat = self.P[0][0]/(1+(self.g[0]-1)/2*self.M[0]**2)**(self.g[0]/(self.g[0]-1))
+        self.T = self.T*np.ones((2, round(self.l/self.stepSize)+1))
+        self.T[1][0] = Tstat
+        self.P = self.P*np.ones((2, round(self.l/self.stepSize)+1))
+        self.P[1][0] = Pstat
+        self.mf = self.mf*np.ones(round(self.l/self.stepSize)+1)
+        self.M = self.M*np.ones(round(self.l/self.stepSize)+1)
+        self.A = self.A*np.ones(round(self.l/self.stepSize)+1)
+        self.g = self.g*np.ones(round(self.l/self.stepSize)+1)
+        self.v = self.v*np.ones(round(self.l/self.stepSize)+1)
+        self.cp = self.cp*np.ones(round(self.l/self.stepSize)+1)
+        self.R = self.R*np.ones(round(self.l/self.stepSize)+1)
+        
+        for i in range(round(self.l/self.stepSize)):
+            cpair = (27.453+6.1838*(self.T[1][i]/1000)+.89932*(self.T[1][i]/1000)**2)/28*1000
+            cpH2 = (26.896+4.3501*(self.T[1][i]/1000)-.32674*(self.T[1][i]/1000)**2)/2*1000
+            gair = cpair/(cpair-self.R[0])
+            gH2 = cpH2/(cpH2-4157)
+            alpha = (self.mf[i]-self.mf[0])/self.mf[0]
+            self.g[i+1] = (gair+alpha*gH2)/(1+alpha)
+            self.cp[i+1] = (cpair+alpha*cpH2)/(1+alpha)
+            self.R[i+1] = (self.R[0]+alpha*8314/2)/(1+alpha)
             
-            for i in range(round(self.l/self.stepSize)):
-                cpair = (27.453+6.1838*(self.T[1][i]/1000)+.89932*(self.T[1][i]/1000)**2)/28*1000
-                cpH2 = (26.896+4.3501*(self.T[1][i]/1000)-.32674*(self.T[1][i]/1000)**2)/2*1000
-                gair = cpair/(cpair-self.R[0])
-                gH2 = cpH2/(cpH2-4157)
-                alpha = (self.mf[i]-self.mf[0])/self.mf[0]
-                self.g[i+1] = (gair+alpha*gH2)/(1+alpha)
-                self.cp[i+1] = (cpair+alpha*cpH2)/(1+alpha)
-                self.R[i+1] = (self.R[0]+alpha*8314/2)/(1+alpha)
-                
-                dm = (self.interp(i*self.stepSize)+self.interp((i+1)*self.stepSize))/2*self.stepSize
-                #print(dm/self.stepSize) 
-                self.mf[i+1] = self.mf[i] + dm
-                
-                dTt = dm*(self.h-self.T[0][i]*self.cp[i+1])/(self.cp[i+1]*self.mf[i+1])
-                self.T[0][i+1] = self.T[0][i] + dTt
-                
-                slopeIndex = int(np.floor(i*self.stepSize*len(self.slope)/self.l))
-                #print(slopeIndex)
-                #print(self.slope[slopeIndex])
-                dA = 2*np.sqrt(self.A[i]*np.pi)*np.tan(self.slope[slopeIndex])*self.stepSize
-                #print(dA)
-                self.A[i+1] = self.A[i] + dA
-                
-                dM = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*(-1/self.A[i]*dA/self.stepSize+\
-                    (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*dTt/self.stepSize)*self.stepSize
-                self.M[i+1] = self.M[i] + dM
-                
-                self.T[1][i+1] = self.T[0][i+1]/(1+(self.g[i+1]-1)/2*self.M[i+1]**2)
-                
-                self.P[1][i+1] = self.mf[i+1]/(self.A[i+1]*self.M[i+1])*np.sqrt(self.R[i+1]*self.T[1][i+1]/self.g[i+1])
-                self.P[0][i+1] = self.P[1][i+1]*(self.T[0][i+1]/self.T[1][i+1])**(self.g[i+1]/(self.g[i+1]-1))
-
-                self.v[i+1] = self.M[i+1]*np.sqrt(self.g[i+1]*self.R[i+1]*self.T[1][i+1])
-
-                #print(i)
-                if self.P[1][i+1] < self.targetExitPressure or self.M[i] < 1.05:
-                    #print('hello')
-                    self.v[i+1] = -1
-                    #print(i)
-                    #print('Pressure or Mach deficiency at '+str(i*self.stepSize))
-                    #print(self.P[1][i+1])
-                    #print(min(self.M))
-                    #print(self.M)
-                    #for j in range(1, len(self.v)):
-                    #    self.v[j] = -1
-                    break
+            dm = (self.interp(i*self.stepSize)+self.interp((i+1)*self.stepSize))/2*self.stepSize
+            #print(dm/self.stepSize) 
+            self.mf[i+1] = self.mf[i] + dm
             
-            if min(self.v) == -1:
-                numFuelCoeff = len(self.a)
-                numSlope = len(self.slope)
-                self.a = []
-                self.slope = []
-                for j in range(numFuelCoeff):
-                    self.a.append(5*random.random())
-                for j in range(numSlope):
-                    self.slope.append(np.pi/4*random.random())
-                #print(self.a)
-                self.normFuelCoeff()
-                self.calcPerformance(attemptNumber+1)
+            self.dTt[i+1] = dm*(self.h-self.T[0][i]*self.cp[i+1])/(self.cp[i+1]*self.mf[i+1])
+            self.T[0][i+1] = self.T[0][i] + self.dTt[i+1]
+            
+            slopeIndex = int(np.floor((i-1)*self.stepSize*len(self.slope)/self.l))
+            if slopeIndex < 0:
+                slopeIndex = 0
+            elif slopeIndex > len(self.slope)-1:
+                slopeIndex = len(self.slope)-1
+            #print(slopeIndex)
+            #print(self.slope[slopeIndex])
+            self.dA[i+1] = 2*np.sqrt(self.A[i]*np.pi)*np.tan(self.slope[slopeIndex])*self.stepSize
+            #print(dA)
+            self.A[i+1] = self.A[i] + self.dA[i+1]
+            
+            #self.dM[i+1] = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*(-1/self.A[i]*self.dA[i+1]/self.stepSize+\
+            #    (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*self.dTt[i+1]/self.stepSize)*self.stepSize
+            self.dM[0][i+1] = self.M[i]*(1+(self.g[i]-1)/2*self.M[i]**2)/(1-self.M[i])*self.stepSize
+            self.dM[1][i+1] = -1/self.A[i]*self.dA[i+1]/self.stepSize
+            self.dM[2][i+1] = (1+self.g[i]*self.M[i]**2)/2*1/self.T[0][i]*self.dTt[i+1]/self.stepSize
+            self.M[i+1] = self.M[i] + self.dM[0][i+1]*(self.dM[1][i+1]+self.dM[2][i+1])
+            
+            self.T[1][i+1] = self.T[0][i+1]/(1+(self.g[i+1]-1)/2*self.M[i+1]**2)
+            
+            self.P[1][i+1] = self.mf[i+1]/(self.A[i+1]*self.M[i+1])*np.sqrt(self.R[i+1]*self.T[1][i+1]/self.g[i+1])
+            self.P[0][i+1] = self.P[1][i+1]*(self.T[0][i+1]/self.T[1][i+1])**(self.g[i+1]/(self.g[i+1]-1))
+
+            self.v[i+1] = self.M[i+1]*np.sqrt(self.g[i+1]*self.R[i+1]*self.T[1][i+1])
+
+            if self.P[1][i+1] < self.targetExitPressure or self.M[i] < 1.05:
+                self.v[len(self.v)-1] = -1
+                break
     
     def interp(self, x):
         adx = self.l/(len(self.a)-1)
@@ -175,3 +162,18 @@ class Combustor:
 
     def setSlope(self, slope):
         self.slope = slope
+
+    def getJetThrust(self):
+        if isinstance(self.v, float):
+            return -1
+        else:
+            return self.v[len(self.v)-1]*self.mf[len(self.mf)-1]
+
+    def getdA(self):
+        return self.dA
+
+    def getdTt(self):
+        return self.dTt
+
+    def getdM(self):
+        return self.dM
