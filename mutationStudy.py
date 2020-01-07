@@ -15,7 +15,7 @@ def performanceThreads(carray, processNum, numParents, numChildren, numThreads):
 
 def main():
     os.system("cls")
-
+    #for parents in range(5):
     for iterations in range(10):
 
         #physcial inputs
@@ -32,14 +32,14 @@ def main():
         
         #genetic alogrithm parameters
         dx = .01
-        numParents = 100
-        numChildren = 100
+        numParents = 200
+        numChildren = 200
         generationSize = numParents+numChildren
-        numGenerations = round(1e1)
-        numFuelCoeff = 10
-        numSlope = 10
+        numGenerations = round(5e2)
+        numFuelCoeff = 20
+        numSlope = 20
         numThreads = 5
-        baseMutationRate = 3
+        baseMutationRate = 20
 
         carray = []
 
@@ -102,8 +102,10 @@ def main():
             for j in range(len(processes)):
                 processes[j].join()
 
-        print(iterations)
+        print(iterations+1)
         print(carray[0].getJetThrust())
+        print(carray[0].geta())
+        print(carray[0].getSlope())
 
 if __name__ == "__main__":
     main()

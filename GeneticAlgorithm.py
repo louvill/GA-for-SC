@@ -29,15 +29,17 @@ def main():
     cp0 = 1218
     
     #genetic alogrithm parameters
-    dx = .01
+    dx = .0025
+    #numParents = 240
+    #numChildren = 360
     numParents = 100
-    numChildren = 100
+    numChildren = 20
     generationSize = numParents+numChildren
-    numGenerations = round(1e2)
-    numFuelCoeff = 10
-    numSlope = 10
+    numGenerations = round(1e3)
+    numFuelCoeff = 8
+    numSlope = 7
     numThreads = 5
-    baseMutationRate = 3
+    baseMutationRate = 20
 
     carray = []
 
@@ -67,7 +69,7 @@ def main():
 
         #generation performance reporting
         genHistory.append(carray[0].getJetThrust())
-        for j in range(5):
+        for j in range(10):
             print('Jet thrust for element ' + str(j+1) + ': ' + str(carray[j].getJetThrust()))
 
         #breeding
