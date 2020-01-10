@@ -32,14 +32,14 @@ def main():
     dx = .0025
     #numParents = 240
     #numChildren = 360
-    numParents = 100
+    numParents = 200
     numChildren = 20
     generationSize = numParents+numChildren
     numGenerations = round(1e3)
-    numFuelCoeff = 8
-    numSlope = 7
+    numFuelCoeff = 5
+    numSlope = 4
     numThreads = 5
-    baseMutationRate = 20
+    baseMutationRate = 30
 
     carray = []
 
@@ -162,7 +162,7 @@ def main():
         #plt.plot(np.linspace(0,lt,len(carray[figNum].getdTt())),carray[figNum].getdTt())
         #plt.grid()
 
-        plt.pause(.05)
+        plt.pause(.01)
 
     #runtime report
     print(time.time()-startTime)

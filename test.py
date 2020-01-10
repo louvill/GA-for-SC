@@ -128,11 +128,37 @@ plt.boxplot([PC[20:40],PC[120:140],PC[220:240]],positions=[5,6,7])
 plt.boxplot([PC[40:60],PC[140:160],PC[240:260]],positions=[9,10,11])
 plt.boxplot([PC[60:80],PC[160:180],PC[260:280]],positions=[13,14,15])
 plt.boxplot([PC[80:100],PC[180:200],PC[280:300]],positions=[17,18,19])
+#plt.boxplot([t[0:20],t[100:120],t[200:220]],positions=[1,2,3])
+#plt.boxplot([t[20:40],t[120:140],t[220:240]],positions=[5,6,7])
+#plt.boxplot([t[40:60],t[140:160],t[240:260]],positions=[9,10,11])
+#plt.boxplot([t[60:80],t[160:180],t[260:280]],positions=[13,14,15])
+#plt.boxplot([t[80:100],t[180:200],t[280:300]],positions=[17,18,19])
 plt.xlim((0,20))
-plt.xticks([1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],['10, 20 Parents','10, 30 Parents','10, 40 Parents','20, 20 Parents',\
-    '20, 30 Parents','20, 40 Parents','30, 20 Parents','30, 30 Parents','30, 40 Parents','40, 20 Parents','40, 30 Parents',\
-    '40, 40 Parents','50, 20 Parents','50, 30 Parents','50, 40 Parents'],rotation=90)
-plt.ylabel('Convergence Rate Score')
+plt.xticks([1,2,3,5,6,7,9,10,11,13,14,15,17,18,19],['10 C, 20 P','10 C, 30 P','10 C, 40 P','20 C, 20 P',\
+    '20 C, 30 P','20 C, 40 P','30 C, 20 P','30 C, 30 P','30 C, 40 P','40 C, 20 P','40 C, 30 P',\
+    '40 C, 40 P','50 C, 20 P','50 C, 30 P','50 C, 40 P'],rotation=90)
+plt.ylabel('Percent Convergence')
 #plt.xlim((0,9))
 #plt.xticks([.5,1.5,2.5,3.5,4.5],[10,20.30,40,50])
+plt.show()
+
+a1 = []
+a2 = []
+
+with open('mutation.csv') as csv_file:
+    csv_reader = csv.reader(csv_file,delimiter=',')
+    for row in csv_reader:
+        a1.append(float(row[0]))
+        a2.append(float(row[1]))
+
+plt.figure(2)
+plt.scatter(a1,a2,marker='.',c='black')
+y = []
+x = []
+for i in range(51):
+    x.append(i)
+    y.append(-.0003*i**2+.0184*i+.7061)
+plt.plot(x,y,'k--')
+plt.xlabel('Mutation Frequency')
+plt.ylabel('Percent Convergence')
 plt.show()
